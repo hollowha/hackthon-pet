@@ -119,7 +119,16 @@ export default {
     createParticles(event) {
       console.log('Clicked element class:', event.target.className);
       const currentclass = event.target.className;
-      const audio = new Audio('click_wood.mp3');
+      let audio = new Audio('click_wood.mp3');
+      if ((typeof currentclass === 'string' || Array.isArray(currentclass)) && currentclass.includes('pet')) {
+        audio = new Audio('rubber_duck.mp3');
+      }
+
+      // 1% 的機率播放另一個音效
+      if (Math.random() < 0.05) {
+        audio = new Audio('ducksong.mp3');
+      }
+      
       audio.play();
       console.log('createParticles');
       const particlesCount = 30; // 粒子數量
