@@ -5,6 +5,12 @@
     <router-view ></router-view> <!-- 渲染當前路由的頁面 -->
     <BottomBar v-if="!isWelcomePage" />
     <div class="particles" id="particles-js"></div> <!-- 添加粒子容器 -->
+    <div
+      class="audio-player"
+      v-show="$route.path === '/main'" >
+      <span @click="togglePlay" style="font-size: large;">{{ isPlaying ? '⏸️' : '▶️' }}</span>
+    </div>
+    <audio ref="audio" src="background.mp3" loop></audio>
   </div>
 </template>
 
@@ -20,6 +26,13 @@ export default {
   components: {
     BottomBar,
     NavBar,
+
+  },
+  data() {
+    return {
+      
+      isPlaying: false,
+    };
   },
   computed: {
     isWelcomePage() {
@@ -29,8 +42,19 @@ export default {
   mounted() {
     this.initializeUserData();
     this.setupPassiveIncome(); // 被動產生虛擬幣和鑽石
+    console.log("aaaa", this.$route.path);
   },
   methods: {
+
+    togglePlay() {
+      const audio = this.$refs.audio;
+      this.isPlaying = !this.isPlaying;
+      if (this.isPlaying) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    },
     initializeUserData() {
       const userStore = useUserStore();
       const storedUser = localStorage.getItem('user');
@@ -93,6 +117,10 @@ export default {
     },
     // 創建粒子效果
     createParticles(event) {
+      console.log('Clicked element class:', event.target.className);
+      const currentclass = event.target.className;
+      const audio = new Audio('click_wood.mp3');
+      audio.play();
       console.log('createParticles');
       const particlesCount = 30; // 粒子數量
       const particlesContainer = document.getElementById('particles-js'); // 粒子容器
@@ -109,6 +137,14 @@ export default {
         particle.className = 'particle'; // 設定類別
         particle.style.left = `${x}px`; // 粒子初始位置
         particle.style.top = `${y}px`;
+        let dur = 0.5;
+        if ((typeof currentclass === 'string' || Array.isArray(currentclass)) && currentclass.includes('pet')) {
+          particle.style.width = '10px'; // 調整心形粒子的大小
+          particle.style.height = '10px';
+          particle.style.backgroundColor = 'red'; // 心形粒子的顏色
+          particle.style.borderRadius = '50%'; // 圓形粒子
+          dur = 2;
+        }
         particlesContainer.appendChild(particle); // 將粒子添加到容器
 
         const randomX = Math.random() * 200 - 100; // 隨機 X 偏移量
@@ -119,11 +155,14 @@ export default {
           x: randomX,
           y: randomY,
           opacity: 0, // 逐漸隱藏
-          duration: 0.5,
+          duration: dur,
           onComplete: () => particle.remove() // 動畫完成後移除粒子
         });
       }
-    }
+    },
+    
+    
+   
     
 
   }
@@ -133,6 +172,12 @@ export default {
 </script>
 
 <style>
+
+.audio-player {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 body {
   margin: 0;
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
