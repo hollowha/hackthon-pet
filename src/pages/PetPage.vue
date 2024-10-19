@@ -1,5 +1,11 @@
 <template>
     <div class="pet-page">
+        
+        <div style="height: 500px;">hahaha</div>
+        <br>
+        <br>
+        <br>
+        <br>
         <!-- 上半部 - 寵物特寫與資訊 -->
         <div class="pet-feature" @click="handlePetClick">
             <div class="pet-info">

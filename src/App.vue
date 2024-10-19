@@ -1,7 +1,8 @@
 <template>
   <div id="app"  @click="createParticles">
-    <NavBar v-if="!isWelcomePage" />
-    <router-view></router-view> <!-- 渲染當前路由的頁面 -->
+    <NavBar style="margin-bottom: 3%;" v-if="!isWelcomePage" />
+    
+    <router-view ></router-view> <!-- 渲染當前路由的頁面 -->
     <BottomBar v-if="!isWelcomePage" />
     <div class="particles" id="particles-js"></div> <!-- 添加粒子容器 -->
   </div>
