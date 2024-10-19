@@ -157,7 +157,7 @@ body {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background-color: #ff8cdb; /* 粒子顏色 */
+  background-color: rgb(105, 166, 251); /* 粒子顏色 */
   pointer-events: none;
 }
 </style>
