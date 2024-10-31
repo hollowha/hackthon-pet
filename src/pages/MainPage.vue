@@ -57,6 +57,7 @@
 </template>
 
 <script>
+// import 'openai/shims/node';
 import { ref, update, onValue } from 'firebase/database';
 import { database } from '../firebase'; // 引入 Firebase Realtime Database
 import OpenAI from "openai";
