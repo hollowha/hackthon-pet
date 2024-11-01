@@ -1,0 +1,60 @@
+name: CI/CD Pipeline for K3s
+
+on:
+  push:
+    branches:
+      - main # 當推送到主分支時觸發
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:latest .
+          docker push ghcr.io/${{ github.repository }}:latest
+
+  deploy-to-machine:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Install SSH client
+        run: sudo apt-get install -y openssh-client sshpass
+
+      - name: Deploy to K3s
+        env:
+          K3S_IP: ${{ secrets.K3S_IP }}
+          K3S_USER: ${{ secrets.K3S_USER }}
+          K3S_PASSWORD: ${{ secrets.K3S_PASSWORD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          GH_USERNAME: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.MY_TOKEN }}
+        run: |
+          sshpass -p "$K3S_PASSWORD" ssh -o StrictHostKeyChecking=no -p $SSH_PORT $K3S_USER@$K3S_IP << EOF
+            # 先刪除舊的 secret（如果存在）
+            kubectl delete secret ghcr-secret --ignore-not-found
+
+            # 創建新的 secret
+            kubectl create secret docker-registry ghcr-secret \
+              --docker-server=ghcr.io \
+              --docker-username=$GH_USERNAME \
+              --docker-password=$GH_TOKEN \
+              --docker-email=yunchieh680@gmail.com
+
+            # 重啟部署
+            kubectl rollout restart deployment/my-deployment -n default
+            
+            # 等待滾動更新完成
+            kubectl rollout status deployment/my-deployment -n default
+          EOF
