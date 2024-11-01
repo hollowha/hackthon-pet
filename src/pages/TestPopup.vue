@@ -8,6 +8,8 @@
         :image="'./pet/pet1.png'"
         @close="isPopupVisible = false"
         />
+        <h1> {{ mes }}</h1>
+
     </div>
 </template>
   
@@ -21,11 +23,12 @@
     data() {
       return {
         isPopupVisible: false,
+        mes: "Hello World",
       };
     },
     methods: {
       showPopup() {
-        this.isPopupVisible = true;
+        this.isPopupVisible = false;
       },
     },
   };

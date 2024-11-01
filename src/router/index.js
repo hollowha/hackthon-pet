@@ -79,7 +79,7 @@ const routes = [
     path: "/testpopup",
     name: "testpopup",
     component: TestPopup,
-    meta: { requiresAuth: true },
+    // meta: { requiresAuth: true },
   },
   {
     path: "/social",
