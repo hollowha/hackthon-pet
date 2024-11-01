@@ -37,7 +37,7 @@ const routes = [
     path: "/pet",
     name: "Pet",
     component: PetPage,
-    meta: { requiresAuth: true }, // 需要登入的頁面
+    // meta: { requiresAuth: true }, // 需要登入的頁面
   },
   {
     path: "/shop",
