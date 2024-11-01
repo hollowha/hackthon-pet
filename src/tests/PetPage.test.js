@@ -4,6 +4,8 @@ import PetPage from '../pages/PetPage.vue';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { usePetStore } from '../stores/petStore';
+import 'web-streams-polyfill'; // 嘗試這個
+
 
 // 初始化 Pinia store
 const app = createApp(PetPage);

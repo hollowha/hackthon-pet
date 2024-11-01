@@ -2,6 +2,8 @@ import { mount } from '@vue/test-utils';
 import ShopPage from '@/pages/ShopPage.vue';
 import { createTestingPinia } from '@pinia/testing';
 import { vi } from 'vitest';
+import 'web-streams-polyfill'; // 嘗試這個
+
 
 // 模擬 localStorage
 beforeEach(() => {

@@ -3,6 +3,8 @@ import { test, expect, vi } from 'vitest';
 import MainPage from '../pages/MainPage.vue';
 import { createPinia } from 'pinia';
 import { ref, update } from 'firebase/database';
+import 'web-streams-polyfill'; // 嘗試這個
+
 
 // 模擬 Firebase 的 getDatabase 和 onValue 方法
 vi.mock('firebase/database', () => ({

@@ -4,6 +4,8 @@ import New2TaskPage from '../pages/New2TaskPage.vue';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { ref } from 'vue';
+import 'web-streams-polyfill'; // 嘗試這個
+
 
 // 假設的任務數據
 const mockTasks = [
