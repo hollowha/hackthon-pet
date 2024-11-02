@@ -19,9 +19,9 @@
         />
         <button @click="sendMessage" class="send-button">Send</button>
       </div>
-
+      <button @click="canDownload = !canDownload">Toggle Download Button</button>
     </div>
-    <button @click="canDownload = !canDownload">Toggle Download Button</button>
+    
   </template>
   
   <script>
