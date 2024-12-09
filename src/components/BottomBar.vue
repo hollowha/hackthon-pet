@@ -15,7 +15,6 @@
             </div> -->
             <font-awesome-icon :icon="['fas', 'home']" class="icon" />
         </button>
-
         <button class="nav-item" @click="navigateTo('Shop')">
             <font-awesome-icon :icon="['fas', 'store']" class="icon" />
         </button>

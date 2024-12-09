@@ -28,7 +28,6 @@ export default {
     components: {
         FontAwesomeIcon, // 註冊 FontAwesomeIcon 組件
     },
-
     setup() {
         const userStore = useUserStore();
         const addCoinAnime = ref(null);
