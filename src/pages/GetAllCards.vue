@@ -1,7 +1,7 @@
 <template>
     <div class="flashcard-wrapper">
         <div class="header">
-            <div class="title">All the cards!</div>
+            <div class="title">所有字卡</div>
             <router-link to="/learn">
                 <button class="back-button">Back to learning</button>
             </router-link>
@@ -15,6 +15,8 @@
                         <hr />
                         <p class="part-of-speech"><strong>詞性：</strong>{{ card.partOfSpeech }}</p>
                         <p class="example"><strong>例句：</strong>{{ card.exampleSentence }}</p>
+                        <button class="delete-button" @onclick="deleteFlashcard(card.index)">刪除</button>
+                        <button class="edit-button">編輯</button>
                     </div>
                 </div>
             </div>
@@ -61,7 +63,7 @@ export default {
     methods: {
         async fetchFlashcards() {
             const db = getDatabase();
-            const userId = 'testUserId';
+            const userId = JSON.parse(localStorage.getItem("user")).uid;
             const flashcardsRef = ref(db, `users/${userId}/wordCards`);
 
             try {
@@ -76,6 +78,20 @@ export default {
                 }
             } catch (error) {
                 console.error("Error fetching flashcards: ", error);
+            }
+        },
+        async deleteFlashcard(cardId) {
+            const db = getDatabase();
+            const userId = JSON.parse(localStorage.getItem("user")).uid;
+            const cardRef = ref(db, `users/${userId}/wordCards/${cardId}`);
+            
+            try {
+                await remove(cardRef);
+                // Remove the card from the local flashcards array
+                this.flashcards = this.flashcards.filter(card => card.id !== cardId);
+                console.log(`Flashcard with ID ${cardId} deleted successfully.`);
+            } catch (error) {
+                console.error("Error deleting flashcard: ", error);
             }
         },
         flipCard(card) {
@@ -104,7 +120,7 @@ export default {
     justify-content: space-between; 
     align-items: center;        
     padding: 10px;             
-    margin-top: 100px;
+    margin-top: 125px;
     gap: 50px;
 }
 
@@ -204,6 +220,19 @@ export default {
 
 .example {
   margin-top: 1rem;
+}
+
+.delete-button,
+.edit-button {
+    margin-right: 5px;
+    padding-right: 10px;
+    padding-left: 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    background-color: #ff6f61;
+    color: white;
 }
 
 button:hover {

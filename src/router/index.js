@@ -17,9 +17,11 @@ import FlashcardPage from "@/pages/FlashcardPage.vue";
 
 import CardAddPage from "@/pages/CardAddPage.vue";
 import GetAllCards from "@/pages/GetAllCards.vue";
-
 import ChatBot from "@/pages/ChatBot.vue";
-
+import CardCreateByTopic from "@/components/CardCreateByTopic.vue";
+import learnMenu from "@/pages/LearnMenu.vue";
+import CreateMenu from "@/pages/CreateMenu.vue";
+import CardCreateByFile from "@/components/CardCreateByFile.vue";
 
 const routes = [
   {
@@ -97,7 +99,7 @@ const routes = [
     path: "/learn",
     name: "learn",
     component: FlashcardPage,
-    //meta: { requiresAuth: true }, // 需要登入的頁面
+    meta: { requiresAuth: true },
   },
   {
     path: "/card",
@@ -107,9 +109,9 @@ const routes = [
   },
   {
     path: "/all",
-    name: "All",
+    name: "AllCards",
     component: GetAllCards,
-    //meta: { requiresAuth: true },
+    meta: { requiresAuth: true },
   },
   {
     path: "/chatbot",
@@ -117,6 +119,28 @@ const routes = [
     component: ChatBot,
     //meta: { requiresAuth: true },
   },
+  {
+    path: "/menu",
+    name: "menu",
+    component: learnMenu,
+    //meta: { requiresAuth: true },
+  },
+  {
+    path:"/cardByTopic",
+    name: "CardByTopic",
+    component: CardCreateByTopic,
+  },
+  {
+    path: "/createMenu",
+    name: "createMenu",
+    component: CreateMenu,
+  },
+  {
+    path: "/createByFile",
+    name: "CreateByFile",
+    component: CardCreateByFile,
+  },
+  
 ];
 
 const router = createRouter({

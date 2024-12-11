@@ -3,7 +3,7 @@
     <div class="header">
       <div class="title">Learn!</div>
       <router-link to="/all">
-        <button class="all-cards-button" @click="viewAllCards">
+        <button class="all-cards-button" @click="navigateTo('AllCards')">
           View all my cards!
         </button>
       </router-link>
@@ -27,14 +27,24 @@
         </div>
       </div>
       <div class="controls">
-        <button @click.stop="rateCard('good')">記起來了</button>
-        <button @click.stop="rateCard('again')">再試一次</button>
+        <button class="good-button" @click.stop="rateCard('good')">記起來了</button>
+        <button class="try-again-button" @click.stop="rateCard('again')">再試一次</button>
       </div>
     </div>
     <div v-else>
       <p>No flashcards available.</p>
-      <button @click="tryAgain()">Try Again</button>
+      <button @click="tryAgain()">再次學習</button>
+      <button @click="navigateTo('createMenu')">創建新字卡</button>
     </div>
+
+     <!-- Score Modal (Pop-up window) -->
+     <div v-if="showScore" class="score-modal-overlay">
+      <div class="score-modal-content">
+        <p>Your Score: {{ score }}%</p>
+        <button @click="closeScoreModal">Close</button>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -47,6 +57,9 @@ export default {
       flashcards: [],
       currentCardIndex: 0,
       cardsToRepeat: [],
+      goodRatings: 0,
+      showScore: false,
+      score: 0,
     };
   },
   computed: {
@@ -58,10 +71,12 @@ export default {
     this.fetchFlashcards();
   },
   methods: {
+    navigateTo(page) {
+      this.$router.push({ name: page });
+    },
     async fetchFlashcards() {
       const db = getDatabase();
-      //const userId = JSON.parse(localStorage.getItem("user")).uid;
-      const userId = "testUserId";
+      const userId = JSON.parse(localStorage.getItem("user")).uid;
       const flashcardsRef = ref(db, `users/${userId}/wordCards`);
 
       try {
@@ -84,7 +99,9 @@ export default {
     rateCard(rating) {
       const currentCard = this.flashcards[this.currentCardIndex];
 
-      if (rating === "again") {
+      if (rating === "good") {
+        this.goodRatings++;
+      } else if (rating === "again") {
         this.cardsToRepeat.push({ ...currentCard, flipped: false });
       }
 
@@ -95,8 +112,21 @@ export default {
         this.cardsToRepeat = [];
         this.currentCardIndex = 0;
       } else {
+        this.calculateScore();
         this.flashcards = [];
       }
+    },
+    calculateScore() {
+      const totalCards = this.flashcards.length + this.cardsToRepeat.length;
+      const scorePercentage = (this.goodRatings / totalCards) * 100;
+      this.score = Math.round(scorePercentage);
+
+      if (this.score > 60) {
+        this.showScore = true;
+      }
+    },
+    closeScoreModal() {
+      this.showScore = false;
     },
     async tryAgain() {
       window.location.reload();
@@ -115,6 +145,7 @@ export default {
   margin-top: 150px;
   gap: 50px;
 }
+
 
 .title {
   font-size: 35px;
@@ -213,5 +244,19 @@ button {
   color: white;
   margin-top: 4px;
 }
+
+button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.good-button {
+  background-color: #69bc54
+}
+
+.try-again-button {
+  background-color: #e23b2c;
+}
+
 
 </style>
