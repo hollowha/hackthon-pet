@@ -1,239 +1,97 @@
 <template>
-    <div class="flashcard-wrapper">
-        <div class="header">
-            <div class="title">所有字卡</div>
-            <router-link to="/learn">
-                <button class="back-button">Back to learning</button>
-            </router-link>
+    <div class="cards-wrapper">
+      <div v-if="loading" class="loading">載入中...</div>
+      <div v-else-if="error" class="error">{{ error }}</div>
+      <div v-else class="cards-container">
+        <div v-for="card in cards" :key="card.id" class="card">
+          <h2>{{ card.word }}</h2>
+          <p><strong>翻譯：</strong>{{ card.translation }}</p>
+          <p><strong>例句：</strong>{{ card.exampleSentence }}</p>
+          <p><strong>詞性：</strong>{{ card.partOfSpeech }}</p>
         </div>
-        <div v-if="flashcards.length > 0">
-            <div class="flashcard" v-for="(card, index) in paginatedFlashcards" :key="index">
-                <div class="content" @click="flipCard(card)">
-                    <p v-if="!card.flipped" class="question">{{ card.word }}</p>
-                    <div v-else class="answer">
-                        <p>{{ card.translation }}</p>
-                        <hr />
-                        <p class="part-of-speech"><strong>詞性：</strong>{{ card.partOfSpeech }}</p>
-                        <p class="example"><strong>例句：</strong>{{ card.exampleSentence }}</p>
-                        <button class="delete-button" @onclick="deleteFlashcard(card.index)">刪除</button>
-                        <button class="edit-button">編輯</button>
-                    </div>
-                </div>
-            </div>
-            <div class="pagination">
-                <button class="previous-page-button" @click="prevPage" :disabled="currentPage === 1">
-                    Previous
-                </button>
-                <span>Page {{ currentPage }} of {{ totalPages }}</span>
-                <button class="next-page-button" @click="nextPage" :disabled="currentPage === totalPages">
-                    Next
-                </button>
-            </div>
-            <div class="end"></div>
-        </div>
-        <div v-else>
-            <p>No flashcards available.</p>
-        </div>
+      </div>
     </div>
-</template>
-
-<script>
-export default {
+  </template>
+  
+  <script>
+  export default {
     data() {
-        return {
-            flashcards: [],
-            currentPage: 1,
-            cardsPerPage: 4,
-        };
+      return {
+        cards: [], // 用於存儲從後端獲取的字卡數據
+        loading: true, // 加載狀態
+        error: null, // 錯誤信息
+      };
     },
-    mounted() {
-        this.fetchFlashcards();
+    async created() {
+      try {
+        // 發送 GET 請求到後端 API
+        const response = await fetch("http://localhost:8080/api/cards");
+        if (!response.ok) {
+          throw new Error("無法取得字卡數據");
+        }
+  
+        // 獲取 JSON 數據
+        const data = await response.json();
+  
+        // 在控制台打印出數據
+        console.log("從後端獲取的字卡數據：", data);
+  
+        // 將數據存儲到 cards 中以供展示
+        this.cards = data;
+      } catch (error) {
+        // 捕獲並存儲錯誤信息
+        this.error = error.message;
+        console.error("獲取字卡數據時發生錯誤：", error);
+      } finally {
+        // 無論成功或失敗，結束加載狀態
+        this.loading = false;
+      }
     },
-    computed: {
-        totalPages() {
-            return Math.ceil(this.flashcards.length / this.cardsPerPage);
-        },
-        paginatedFlashcards() {
-            const start = (this.currentPage - 1) * this.cardsPerPage;
-            return this.flashcards.slice(start, start + this.cardsPerPage);
-        },
-    },
-    methods: {
-        async fetchFlashcards() {
-        /*  const db = getDatabase();
-            const userId = JSON.parse(localStorage.getItem("user")).uid;
-            const flashcardsRef = ref(db, `users/${userId}/wordCards`);
-
-            try {
-                const snapshot = await get(flashcardsRef);
-                if (snapshot.exists()) {
-                    this.flashcards = Object.values(snapshot.val()).map((card) => ({
-                        ...card,
-                        flipped: false,
-                    }));
-                } else {
-                    console.log("No flashcards found.");
-                }
-            } catch (error) {
-                console.error("Error fetching flashcards: ", error);
-            }
-        */
-        },
-        async deleteFlashcard() {//cardId inside()
-        /*
-            const db = getDatabase();
-            const userId = JSON.parse(localStorage.getItem("user")).uid;
-            const cardRef = ref(db, `users/${userId}/wordCards/${cardId}`);
-            
-            try {
-                await remove(cardRef);
-                // Remove the card from the local flashcards array
-                this.flashcards = this.flashcards.filter(card => card.id !== cardId);
-                console.log(`Flashcard with ID ${cardId} deleted successfully.`);
-            } catch (error) {
-                console.error("Error deleting flashcard: ", error);
-            }
-        */
-        },
-        flipCard(card) {
-            card.flipped = !card.flipped;
-        },
-        nextPage() {
-            if (this.currentPage < this.totalPages) {
-                this.currentPage++;
-            }
-        },
-        prevPage() {
-            if (this.currentPage > 1) {
-                this.currentPage--;
-            }
-        },
-    },
-};
-</script>
-
-<style scoped>
-.header {
-    display: flex;                
-    justify-content: space-between; 
-    align-items: center;        
-    padding: 10px;             
-    margin-top: 125px;
-    gap: 50px;
-}
-
-.title {
-    font-size: 35px;
-    text-align: center;
-    margin: 0;
-}
-
-.back-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    background-color: #ff6f61;
-    color: white;
-}
-
-.flashcard-wrapper {
+  };
+  </script>
+  
+  <style scoped>
+  .cards-wrapper {
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
-    margin-top: 50px;
-    margin-bottom: 100px;
-}
-
-.flashcard {
-    padding: 20px;
-    border-radius: 12px;
-    width: 300px;
-    background-color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    margin-bottom: 20px;
-    font-size: 30px;
-}
-
-.content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    cursor: pointer;
-}
-
-.part-of-speech,
-.example {
-    text-align: left;
+  }
+  
+  .loading {
     font-size: 20px;
-}
-
-.end {
-    margin-top: 100px;
-}
-
-.pagination {
+    color: #555;
+  }
+  
+  .error {
+    font-size: 20px;
+    color: red;
+  }
+  
+  .cards-container {
     display: flex;
-    align-items: center;
-    margin-top: 20px;
-    justify-content: center;
-}
-
-.previous-page-button {
-    padding: 10px 15px;
-    margin: 0 10px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .card {
+    background-color: #fff7f5;
+    border: 1px solid #ff6f61;
+    border-radius: 8px;
+    padding: 10px;
+    width: 250px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card h2 {
+    color: #ff6f61;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .card p {
     font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    background-color: #ff6f61;
-    color: white;
-}
-
-.next-page-button {
-    padding: 10px 30px;
-    margin: 0 10px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    background-color: #ff6f61;
-    color: white;
-}
-
-.previous-page-button:disabled,
-.next-page-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-.answer {
-    width: 100%;
-}
-
-.example {
-    margin-top: 1rem;
-}
-
-.delete-button,
-.edit-button {
-    margin-right: 5px;
-    padding-right: 10px;
-    padding-left: 10px;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    background-color: #ff6f61;
-    color: white;
-}
-
-button:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-</style>
+    margin: 5px 0;
+  }
+  </style>
+  

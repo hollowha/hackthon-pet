@@ -10,35 +10,23 @@
       </div>
       <div class="word-card__content" style="justify-content: left">
         <input style="display: flex" type="text" class="word-card__input" placeholder="輸入主題" v-model="inputWord" />
-        <!-- Input for number of words -->
-        <input style="display: flex" type="number" class="word-card__input" placeholder="輸入單字數量"
-          v-model.number="wordCount" min="1" />
-        <div class="submit-block" style="display: flex">
-          <button class="word-card__button" :disabled="empty" @click="getCardFromGPT">
-            取得單字
-          </button>
-          <span v-if="empty" style="
-                display: flex;
-                color: gray;
-                margin-top: 10px;
-                margin-left: 5vh;
-              ">* type in the word first</span>
-        </div>
-        <div v-if="wordData && wordData.length" class="word-card__result">
-          <button class="word-card__close" @click="closeCard">
-            <strong>X</strong>
-          </button>
-          <div v-for="(word, index) in wordData" :key="index" class="word-card__item">
-            <h3>{{ word.word }}</h3>
-            <p><strong>詞性：</strong>{{ word.partOfSpeech }}</p>
-            <p><strong>中文翻譯：</strong>{{ word.translation }}</p>
-            <p><strong>例句：</strong>{{ word.exampleSentence }}</p>
-            <hr />
-          </div>
-        </div>
+        <button class="word-card__button" :disabled="empty" @click="generateWords">
+          生成單字
+        </button>
       </div>
     </div>
-    <!-- show loading icon -->
+    <div v-if="currentQuestion" class="word-card__question">
+      <h2 class="word-card__question-title">{{ currentQuestion.chineseTranslation }}</h2>
+      <div class="word-card__options">
+        <button 
+          v-for="(option, index) in currentQuestion.options" 
+          :key="index" 
+          :class="{'correct': isSelectedCorrect && selectedOptionIndex === index}" 
+          @click="handleAnswer(option, index)">
+          {{ option }}
+        </button>
+      </div>
+    </div>
     <div v-if="showLoading" class="loading-modal">
       <div class="loading-content">
         <p>Loading...</p>
@@ -49,30 +37,23 @@
 
 <script>
 import OpenAI from "openai";
-//import { ref, set } from "firebase/database";
-//import { database } from "../firebase"; // 引入 Firebase Realtime Database
 
 export default {
   data() {
     return {
-      inputWord: "", // 用戶輸入的英文單字
-      wordCount: 1,
-      wordData: null, // 單字資料
-      show: true, // whether to show the add-card component
-      showLoading: false, // show loading icon when fetching word data
-      userId: null,
+      inputWord: "",
+      wordList: [],
+      currentQuestion: null,
+      show: true,
+      showLoading: false,
+      selectedOptionIndex: null,
+      isSelectedCorrect: false,
     };
   },
   computed: {
     empty() {
-      return !this.inputWord || this.wordCount <= 0;
+      return !this.inputWord;
     },
-  },
-  mounted() {
-    // Skip UID retrieval for debugging
-    //this.userId = JSON.parse(localStorage.getItem("user")).uid;
-    // You can set a temporary userId for testing
-    //this.userId = 'testUserId'; // Use a test ID or hard-code a value for debugging
   },
   methods: {
     showScreen() {
@@ -81,42 +62,25 @@ export default {
     closeAddCard() {
       this.show = false;
     },
-    closeCard() {
-      this.wordData = null; // 清除單字資料
-    },
-    async getCardFromGPT() {
-      console.log("getCardFromGPT");
+    async generateWords() {
+      console.log("Generating word list from GPT");
       this.showLoading = true;
-      // loading test
 
-      // await sleep(2000);
-      // this.showLoading = false;
-      // let a = 2;
-      // if (a === 2) {
-      //     return;
-      // }
-      let kkk =
-        "c2stcHJvai15cUFsY3JwS1JEMWlkLWU4MHFBSzRHUmRVckYwYlZNemtXSEZNeVFBZ1JCeHBRNm9fZlowY29OeW5xVDNCbGJrRkpnMkFpVVoycjNPb0trYm5QSmlkSm5xTUloMFBmRXg2a2pCcHFkdGVmaGhlbVduNEhhSGZjWkowSGNB";
-      const decodedStr = atob(kkk);
+      let apiKey = "c2stcHJvai15cUFsY3JwS1JEMWlkLWU4MHFBSzRHUmRVckYwYlZNemtXSEZNeVFBZ1JCeHBRNm9fZlowY29OeW5xVDNCbGJrRkpnMkFpVVoycjNPb0trYm5QSmlkSm5xTUloMFBmRXg2a2pCcHFkdGVmaGhlbVduNEhhSGZjWkowSGNB";
+      const decodedStr = atob(apiKey);
 
       const openai = new OpenAI({
         apiKey: decodedStr,
         dangerouslyAllowBrowser: true,
       });
 
-      const prompt = `You are an English teacher to help the user understand an English word.
-          Here is the given topic: "${this.inputWord}". Generate ${this.wordCount} words related to this topic. Please answer with a JSON format string as follows:
-          {"word":"", "translation":"", "exampleSentence": "", "partOfSpeech": "", "imgUrl":""}
-          word: the word itself.
-          translation: Traditional Chinese of the word.
-          exampleSentence: a sample sentence including the word to show the user how to use the word.
-          partOfSpeech: the meaning of the attribute name.
-          You can ignore the imgUrl, just fill with an empty string.
-          Don't use markdown symbols in your answer.`;
+      const prompt = `You are an English teacher helping the user create a list of words for a topic.
+      Given the topic: "${this.inputWord}", generate a list of 20 English words related to this topic.
+      Return the result as a JSON array of strings.`;
 
       try {
         const response = await openai.chat.completions.create({
-          model: "gpt-4", // Use your desired model (GPT-4, GPT-3.5, etc.)
+          model: "gpt-4",
           messages: [
             { role: "system", content: "You are a helpful English teacher." },
             { role: "user", content: prompt },
@@ -124,40 +88,122 @@ export default {
         });
 
         const message = response.choices[0].message.content;
-        console.log("Response from GPT:", message);
+        console.log("Word list from GPT:", message);
 
-        this.storeWordData(message);
+        this.wordList = JSON.parse(message);
+        this.loadNextQuestion();
       } catch (error) {
         console.error("Error interacting with OpenAI:", error);
+      } finally {
         this.showLoading = false;
       }
     },
-    storeWordData() { // mes inside()
-    /*
-        try {
-          const wordDataArray = JSON.parse(mes);
-  
-          wordDataArray.forEach((wordData) => {
-            const cardRef = ref(database, `users/${this.userId}/wordCards/${wordData.word}`);
-            set(cardRef, wordData).catch((error) =>
-              console.error("Error storing data: ", error)
-            );
-          });
-  
-          console.log("Cards stored successfully!");
-          this.wordData = wordDataArray;
-        } catch (error) {
-          console.error("Error parsing or storing word data: ", error);
-        } finally {
-          this.showLoading = false;
-        } 
-    */
+    async loadNextQuestion() {
+  if (this.wordList.length === 0) {
+    this.currentQuestion = null;
+    alert("All questions completed!");
+    return;
+  }
+
+  const word = this.wordList.shift();
+
+  let apiKey = "c2stcHJvai15cUFsY3JwS1JEMWlkLWU4MHFBSzRHUmRVckYwYlZNemtXSEZNeVFBZ1JCeHBRNm9fZlowY29OeW5xVDNCbGJrRkpnMkFpVVoycjNPb0trYm5QSmlkSm5xTUloMFBmRXg2a2pCcHFkdGVmaGhlbVduNEhhSGZjWkowSGNB";
+  const decodedStr = atob(apiKey);
+
+  const openai = new OpenAI({
+    apiKey: decodedStr,
+    dangerouslyAllowBrowser: true,
+  });
+
+
+  const prompt = `You are an English teacher helping the user create a multiple-choice question.
+Given the word: "${word}", generate a JSON object as follows:
+{
+  "chineseTranslation": "", 
+  "options": ["", "", "", ""],
+  "correctAnswer": ""
+}.
+The "options" should include three incorrect english words as distractors along with the correct english word.
+The distractors should be plausible but clearly incorrect.
+Return only the JSON object without any additional text or explanation.The "chineseTranslation" should be the Chinese translation of the word,use zh-tw.`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "You are a helpful English teacher." },
+        { role: "user", content: prompt },
+      ],
+    });
+
+    const message = response.choices[0].message.content;
+    console.log("Raw Question Data from GPT:", message);
+
+    try {
+      this.currentQuestion = JSON.parse(message);
+    } catch (jsonError) {
+      console.error("JSON Parsing Error:", jsonError);
+      console.log("Fallback to display raw response for debugging.");
+      this.currentQuestion = {
+        chineseTranslation: "Invalid response. Check GPT output.",
+        options: ["Error", "Error", "Error", "Error"],
+        correctAnswer: "Error",
+      };
+    }
+  } catch (error) {
+    console.error("Error interacting with OpenAI:", error);
+  }
+}
+    ,
+    handleAnswer(selectedOption, index) {
+      this.selectedOptionIndex = index;
+      this.isSelectedCorrect = selectedOption === this.currentQuestion.correctAnswer;
+
+      setTimeout(() => {
+        this.isSelectedCorrect = false;
+        this.selectedOptionIndex = null;
+        this.loadNextQuestion();
+      }, 2000);
     },
   },
 };
 </script>
 
+<style>
+.word-card__question-title {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.word-card__options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+.word-card__options button {
+  padding: 10px 20px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.word-card__options button:hover {
+  background-color: #e0e0e0;
+}
+.correct {
+  background-color: green !important;
+  color: white;
+}
+</style>
+
 <style scoped>
+.correct {
+  background-color: green;
+  color: white;
+}
 .card-block {
   display: flex;
   justify-content: center;
